@@ -12,6 +12,13 @@ import (
 )
 
 var (
+	fluxBootstrapCmd = `\
+		bootstrap github \
+		--owner=shaked \
+		--repository=fluxcd-test \
+		--branch=main \
+		--path=clusters/tests
+	`
 	githubToken = os.Getenv("GITHUB_TOKEN")
 )
 
@@ -138,13 +145,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = k8s.flux(`\
-		bootstrap github \
-		--owner=shaked \
-		--repository=fluxcd-test \
-		--branch=main \
-		--path=clusters/tests
-	`)
+	_, err = k8s.flux(fluxBootstrapCmd)
 
 	if err != nil {
 		panic(err)
@@ -174,19 +175,6 @@ func main() {
 	}
 	fmt.Println(helm)
 
-	// git, err := k8s.git(`\
-	// 	clone https://oauth2:${GITHUB_TOKEN}@github.com/Shaked/fluxcd-test.git \
-	// 	--single-branch \
-	// 	--branch test \
-	// 	--depth 1 \
-	// 	/tmp/fluxcd-test
-	// `)
-
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println(git)
-
 	ls, err := k8s.exec("ls", fmt.Sprintf("ls -la %v", "/src"))
 	if err != nil {
 		panic(err)
@@ -205,8 +193,7 @@ func main() {
 	)
 
 	if err != nil {
-		log.Println("2 err: ", err)
-		log.Println("exit code")
+		log.Println("infra-custom error, failed for error: ", err)
 		log.Println(k8s.container.ExitCode(k8s.ctx))
 	}
 	log.Println(fluxInfraDiff)
@@ -220,8 +207,7 @@ func main() {
 	)
 
 	if err != nil {
-		log.Println("3 err: ", err)
-		log.Println("exit code")
+		log.Println("apps error, failed for error: ", err)
 		log.Println(k8s.container.ExitCode(k8s.ctx))
 	}
 	log.Println(fluxAppsDiff)
@@ -232,8 +218,7 @@ func main() {
 		hostDir,
 	))
 	if err != nil {
-		log.Println("err: ", err)
-		log.Println("exit code")
+		log.Println("flux-system error, failed for error: ", err)
 		log.Println(k8s.container.ExitCode(k8s.ctx))
 		// panic(err)
 	}
